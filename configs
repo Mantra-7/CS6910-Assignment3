@@ -1,5 +1,1 @@
-1_{'dropout': 0.2, 'embed_size': 64, 'epochs': 10, 'hidden_size': 64, 'lr': 0.005, 'n_layers': 1, 'type': 'gru'}
-2_{'dropout': 0.3, 'embed_size': 64, 'epochs': 10, 'hidden_size': 128, 'lr': 0.001, 'n_layers': 1, 'type': 'gru'}
-3_{'dropout': 0.2, 'embed_size': 64, 'epochs': 10, 'hidden_size': 64, 'lr': 0.001, 'n_layers': 1, 'type': 'gru'}
-4_{'dropout': 0.2, 'embed_size': 64, 'epochs': 10, 'hidden_size': 256, 'lr': 0.001, 'n_layers': 1, 'type': 'gru'}
-5_{'dropout': 0.3, 'embed_size': 32, 'epochs': 10, 'hidden_size': 256, 'lr': 0.001, 'n_layers': 1, 'type': 'gru'}
+1_{'dropout': 0, 'embed_size': 32, 'epochs': 10, 'hidden_size': 512, 'lr': 0.001, 'n_layers': 1, 'type': 'gru'}
