@@ -132,8 +132,10 @@ class AttnDecoderRNN(nn.Module):
 		embedded = self.embedding(input).view(1, bs, -1)
 		embedded = self.dropout(embedded)
 
-		attn_weights = F.softmax(
-			self.attn(torch.cat((embedded[0], hidden[0]), 1)), dim=1)
+		if self.type_t != 'lstm':
+			attn_weights = F.softmax(self.attn(torch.cat((embedded[0], hidden[0]), 1)), dim=1)
+		else:
+			attn_weights = F.softmax(self.attn(torch.cat((embedded[0], hidden[0][0]), 1)), dim=1)
 		attn_applied = torch.bmm(attn_weights.unsqueeze(0),
 								encoder_outputs.unsqueeze(0))
 
@@ -235,33 +237,29 @@ class Seq2Seq(nn.Module):
 		decoder_outputs = torch.zeros(target_length, bs, self.output_size, device=device)
 		if not self.is_attn:
 			if use_teacher_forcing:
-				# Teacher forcing: Feed the target as the next input
 				for di in range(target_length):
 					decoder_output, decoder_hidden = self.decoder(
 						decoder_input, decoder_hidden, bs)
 					decoder_outputs[di] = decoder_output
-					decoder_input = target_tensor[di]  # Teacher forcing
+					decoder_input = target_tensor[di]
 			else:
-				# Without teacher forcing: use its own predictions as the next input
 				for di in range(target_length):
 					decoder_output, decoder_hidden = self.decoder(
 						decoder_input, decoder_hidden, bs)
 					decoder_outputs[di] = decoder_output
 					topv, topi = decoder_output.topk(1)
-					decoder_input = topi.squeeze().detach()  # detach from history as input
+					decoder_input = topi.squeeze().detach()
 					if self.batch_size == 1:
 						if topi == 1:
 							break
 		else:
 			if use_teacher_forcing:
-				# Teacher forcing: Feed the target as the next input
 				for di in range(target_length):
 					decoder_output, decoder_hidden, decoder_attention = self.decoder(
 						decoder_input, decoder_hidden, encoder_outputs, bs)
 					decoder_outputs[di] = decoder_output
 					decoder_input = target_tensor[di]
 			else:
-				# Without teacher forcing: use its own predictions as the next input
 				for di in range(target_length):
 					decoder_output, decoder_hidden, decoder_attention = self.decoder(
 						decoder_input, decoder_hidden, encoder_outputs, bs)
@@ -289,11 +287,35 @@ class Seq2Seq(nn.Module):
 				input_tensor[ei], encoder_hidden)
 			encoder_outputs[ei] = encoder_output[0, 0]
 
-		decoder_input = torch.tensor([[0]], device=device)  # SOS
+		decoder_input = torch.tensor([[0]], device=device)
 
 		decoder_outputs = []
 
-		decoder_hidden = encoder_hidden
+		if self.encoder.n_layers == self.decoder.n_layers:
+			decoder_hidden = encoder_hidden
+		elif self.type_t != 'lstm':
+			decoder_hidden = torch.zeros(self.decoder.n_layers, 1, self.decoder.hidden_size, device=device)
+			av = encoder_hidden[0]
+			for i in range(1,self.encoder.n_layers):
+				av += encoder_hidden[i]
+			av /= self.encoder.n_layers
+			for i in range(self.decoder.n_layers):
+				decoder_hidden[i] = av
+		else:
+			decoder_hidden = (torch.zeros(self.decoder.n_layers, 1, self.decoder.hidden_size, device=device), torch.zeros(self.decoder.n_layers, 1, self.decoder.hidden_size, device=device))
+			av = encoder_hidden[0][0]
+			for i in range(1,self.encoder.n_layers):
+				av += encoder_hidden[0][i]
+			av /= self.encoder.n_layers
+			for i in range(self.decoder.n_layers):
+				decoder_hidden[0][i] = av
+			av = encoder_hidden[1][0]
+			for i in range(1,self.encoder.n_layers):
+				av += encoder_hidden[1][i]
+			av /= self.encoder.n_layers
+			for i in range(self.decoder.n_layers):
+				decoder_hidden[1][i] = av
+
 		if not self.is_attn:
 			for di in range(self.max_length):
 				decoder_output, decoder_hidden = self.decoder(

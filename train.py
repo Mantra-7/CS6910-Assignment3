@@ -1,5 +1,6 @@
 import wandb
 import argparse
+import pandas as pd
 from src.Translator import Translator
 
 parser = argparse.ArgumentParser(description='Train a translator')
@@ -39,9 +40,11 @@ print("Test Loss: ", test_stat[0])
 if args.log:
 	wandb.log({'Test Accuracy': test_stat[1], 'Test Loss': test_stat[0]})
 
-	pred_file = open(args.pred_file_name + '.csv', 'w')
-	for w in translator.dl.test_data['input_seq']:
-		out = translator.translate(w)
-		pred_file.write(w + ',' + out + '\n')
+	pred_file = pd.DataFrame(columns=['input_seq', 'target_seq','output_seq'])
 
-	pred_file.close()
+	for i in range(len(translator.dl.test_data)):
+		w = translator.dl.test_data.iloc[i]['input_seq']
+		out = translator.translate(w)
+		pred_file = pred_file.append({'input_seq': w, 'target_seq': translator.dl.test_data.iloc[i]['target_seq'], 'output_seq': out}, ignore_index=True)
+
+	pred_file.to_csv(args.pred_file_name + '.csv', index=False)

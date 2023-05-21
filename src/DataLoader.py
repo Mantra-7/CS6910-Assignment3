@@ -39,6 +39,16 @@ class Lang:
 		elif char != '_' and char != '^' and char != 'A' and char != 'Z':
 			self.char2count[char] += 1
 
+	def encode_char(self, char):
+		'''
+		Encodes a character into an index
+		'''
+		if char in self.char2index:
+			return self.char2index[char]
+		else:
+			return self.char2index['^']
+
+
 	def encode(self, word):
 		'''
 		Encodes a word into a list of indices
