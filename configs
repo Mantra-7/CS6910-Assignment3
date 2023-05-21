@@ -1,1 +1,1 @@
-1_{'dropout': 0, 'embed_size': 32, 'epochs': 10, 'hidden_size': 512, 'lr': 0.001, 'n_layers': 1, 'type': 'gru'}
+1_{'bs': 1, 'dec_layers': 3, 'dropout': 0, 'embed_size': 16, 'enc_layers': 3, 'epochs': 10, 'hidden_size': 256, 'is_attn': False, 'lr': 0.005, 'optim': 'SGD', 'type': 'lstm'}
